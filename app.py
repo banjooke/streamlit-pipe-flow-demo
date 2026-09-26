@@ -11,8 +11,10 @@ st.write("Estimate average velocity and flow regime for a full circular pipe.")
 
 left, right = st.columns(2)
 with left:
-    flow_m3_h = st.number_input(
-        "Volumetric flow rate (m³/h)", value=10.0, step=0.1, format="%.4f"
+    flow_unit = st.selectbox("Volumetric flow-rate unit", ["m³/h", "L/min"])
+    flow_rate = st.number_input(
+        f"Volumetric flow rate ({flow_unit})", value=10.0, step=0.1, format="%.4f",
+        key="flow_rate",
     )
     diameter_mm = st.number_input(
         "Internal pipe diameter (mm)", value=50.0, step=1.0, format="%.4f"
@@ -26,7 +28,7 @@ with right:
     )
 
 inputs = {
-    "Volumetric flow rate": flow_m3_h,
+    "Volumetric flow rate": flow_rate,
     "Internal pipe diameter": diameter_mm,
     "Fluid density": density,
     "Dynamic viscosity": viscosity_mpa_s,
@@ -37,7 +39,7 @@ if invalid:
     st.error("Enter a finite value greater than zero for: " + ", ".join(invalid) + ".")
 else:
     # Convert to SI units; density is already in kg/m³.
-    flow = flow_m3_h / 3600.0
+    flow = flow_rate / (3600.0 if flow_unit == "m³/h" else 60000.0)
     diameter = diameter_mm / 1000.0
     viscosity = viscosity_mpa_s / 1000.0
     try:
@@ -66,7 +68,10 @@ else:
 
 with st.expander("Equations and unit conversions"):
     st.markdown("**Convert inputs to SI units**")
-    st.latex(r"Q\,[\mathrm{m^3/s}] = Q\,[\mathrm{m^3/h}] / 3600")
+    if flow_unit == "m³/h":
+        st.latex(r"Q\,[\mathrm{m^3/s}] = Q\,[\mathrm{m^3/h}] / 3600")
+    else:
+        st.latex(r"Q\,[\mathrm{m^3/s}] = Q\,[\mathrm{L/min}] / 60\,000")
     st.latex(r"D\,[\mathrm{m}] = D\,[\mathrm{mm}] / 1000")
     st.latex(r"\mu\,[\mathrm{Pa\cdot s}] = \mu\,[\mathrm{mPa\cdot s}] / 1000")
     st.markdown("Density $\\rho$ is already in SI units (kg/m³).")
